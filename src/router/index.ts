@@ -1,41 +1,47 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
-import AboutView from '@/views/AboutView.vue';
-import BrazilView from '@/views/BrazilView.vue';
-import HawaiiView from '@/views/HawaiiView.vue';
-import JamaicalView from '@/views/JamaicalView.vue';
-import PanamaView from '@/views/PanamaView.vue';
+import sourceData from '@/data.json';
+import type { Destination } from '@/types';
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'home',
     component: HomeView,
   },
   {
-    path: '/about',
-    name: 'About',
-    component: AboutView,
+    path: '/destination/:id/:slug',
+    name: 'destination',
+    component: () => import('@/views/DestinationView.vue'),
+    props: (route) => ({ ...route.params, id: parseInt(route.params.id) }),
+    beforeEnter: (to, from) => {
+      const exists = sourceData.destinations.find(
+        (destination: Destination) => destination.id === parseInt(to.params.id)
+      );
+
+      if (!exists)
+        return {
+          name: 'NotFound',
+          params: {
+            pathMatch: to.path.split('/').slice(1),
+          },
+          query: to.query,
+          hash: to.hash,
+        };
+    },
+    children: [
+      {
+        path: ':experienceSlug',
+        name: 'experience',
+        component: () => import('@/views/ExperienceView.vue'),
+        props: (route) => ({ ...route.params, id: parseInt(route.params.id) }),
+      },
+    ],
   },
   {
-    path: '/brazil',
-    name: 'Brazil',
-    component: BrazilView,
-  },
-  {
-    path: '/hawaii',
-    name: 'Hawaii',
-    component: HawaiiView,
-  },
-  {
-    path: '/jamaica',
-    name: 'Jamaica',
-    component: JamaicalView,
-  },
-  {
-    path: '/panama',
-    name: 'Panama',
-    component: PanamaView,
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFound.vue'),
   },
 ];
 
