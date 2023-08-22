@@ -10,6 +10,27 @@ const routes = [
     component: HomeView,
   },
   {
+    path: '/protected',
+    name: 'protected',
+    component: () => import('@/views/ProtectedView.vue'),
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/Login.vue'),
+  },
+  {
+    path: '/invoices',
+    name: 'invoices',
+    component: () => import('@/views/Invoices.vue'),
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/destination/:id/:slug',
     name: 'destination',
     component: () => import('@/views/DestinationView.vue'),
@@ -48,6 +69,26 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    return (
+      savedPosition ||
+      new Promise((resolve) => {
+        setTimeout(
+          () => ({
+            top: 0,
+            behavior: 'smooth',
+          }),
+          300
+        );
+      })
+    );
+  },
+});
+
+router.beforeEach((to, from) => {
+  if (to.meta.requiresAuth && !window.user) {
+    return { name: 'login', query: { redirect: to.fullPath } };
+  }
 });
 
 export default router;
